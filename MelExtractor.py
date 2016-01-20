@@ -335,11 +335,7 @@ class MelExtractor(object):
 
                     try:
                         prm, smp = self.wave_analyze(self.glob_path+tmp)
-                    except wave.Error:
-                        logging.critical(u'Wrong type of file %s' % tmp)
-                    except IOError:
-                        logging.critical(u'Wrong type of file %s' % tmp)
-                    except EOFError:
+                    except (wave.Error, IOError, EOFError):
                         logging.critical(u'Wrong type of file %s' % tmp)
 
                     else:
@@ -369,7 +365,7 @@ class MelExtractor(object):
                                 plt.plot(np.linspace(0, len(i)-1, len(i)-1), i[1:])
                             plt.show()
                             # You can save numpy array there
-                            # self.save_file(samples=smp, file_name=tmp+str(ss))
+                            self.save_file(samples=smp, file_name=tmp+str(ss))
         else:
             print self.glob_path
             try:
