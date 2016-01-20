@@ -33,33 +33,65 @@ class ANNgenerator(object):
             if file.startswith(com):
                 return com
 
-    def exam(self, dc):
+    def exam(self, dc, train_com):
         put, out = [], []
         ds = SupervisedDataSet(420, 1)
         nt = buildNetwork(420, 3, 1, bias=True, hiddenclass=SigmoidLayer, outclass=SigmoidLayer)
 
         for way in self.lst_path:
-            print way
             for i in os.listdir(way):
-                print way+i, dc[self.link(i)]
                 result = self.ext(way+i)
                 ds.addSample(result, (dc[self.link(i)],))
                 put.append(result)
                 out.append([dc[self.link(i)]])
-
-        net = nl.net.newff([[np.min(put), np.max(put)]]*420, [1, 1], [nl.trans.LogSig(), nl.trans.SatLinPrm()])
+        num_hid = 1
+        net = nl.net.newff([[np.min(put), np.max(put)]]*420, [num_hid, 1], [nl.trans.LogSig(), nl.trans.SatLinPrm()])
         net.trainf = nl.train.train_rprop
-        print len(put), len(out), out
-        trainer = RPropMinusTrainer(nt, dataset=ds, verbose=True)
-        trainer.trainUntilConvergence(maxEpochs=20, verbose=None, continueEpochs=100, validationProportion=1e-10)
-        net.train(put, out, epochs=10000, show=10, goal=1e-4, lr=1e-10)
+        trainer = RPropMinusTrainer(nt, dataset=ds, verbose=False)
+        error = trainer.trainUntilConvergence(maxEpochs=100, verbose=True, continueEpochs=100, validationProportion=1e-10)
+        error = net.train(put, out, epochs=300, show=300, goal=1e-4, lr=1e-10)
 
-    def show_res(self):
-        dc = {"back": 1, "dark": 0, "hight": 0, "light": 0, "low": 0, "next": 0, "stop": 0}
+        while error[-1] > 0.01:
+            net = nl.net.newff([[np.min(put), np.max(put)]]*420, [num_hid, 1], [nl.trans.LogSig(), nl.trans.SatLinPrm()])
+            net.trainf = nl.train.train_rprop
+            error = net.train(put, out, epochs=300, show=300, goal=1e-4, lr=1e-10)
+            num_hid += 1
+
+        try:
+            net.save('networks/%s_neurolab' % train_com)
+            fl = open('networks/%s_brain' % train_com, 'w')
+            pickle.dump(nt, fl)
+            fl.close()
+        except IOError:
+            os.mkdir('networks')
+            net.save('networks/%s_neurolab' % train_com)
+
+    def train_res(self):
         self.lst_of_commands = ["back", "dark", "hight", "light", "low", "next", "stop"]
-        self.lst_path = ["C:/Python27/Neural/Networks/stop/numpy30/", "C:/Python27/Neural/Networks/back/numpy30/", "C:/Python27/Neural/Networks/dark/numpy30/", "C:/Python27/Neural/Networks/hight/numpy30/", "C:/Python27/Neural/Networks/light/numpy30/", "C:/Python27/Neural/Networks/low/numpy30/", "C:/Python27/Neural/Networks/next/numpy30/"]
-        self.exam(dc)
+        dc = {"back": 0, "dark": 0, "hight": 0, "light": 0, "low": 0, "next": 0, "stop": 0}
+        for i in self.lst_of_commands:
+            print i
+            dc[i] = 1
+            self.lst_path = ["C:/Python27/Neural/Networks/stop/numpy30/", "C:/Python27/Neural/Networks/back/numpy30/", "C:/Python27/Neural/Networks/dark/numpy30/", "C:/Python27/Neural/Networks/hight/numpy30/", "C:/Python27/Neural/Networks/light/numpy30/", "C:/Python27/Neural/Networks/low/numpy30/", "C:/Python27/Neural/Networks/next/numpy30/"]
+            self.exam(dc, i)
+            dc[i] = 0
+
+    def test_res(self):
+        self.lst_of_commands = ["back", "dark", "hight", "light", "low", "next", "stop"]
+        for i in self.lst_of_commands:
+            print i,
+            try:
+                file = open('networks/%s_brain' % i, 'r')
+                nt = pickle.load(file)
+                file.close()
+                net = nl.load('networks/%s_neurolab' % i)
+                for fls in os.listdir("C:/Python27/Neural/Networks/back/numpy30/"):
+                    example = self.ext("C:/Python27/Neural/Networks/back/numpy30/%s" % fls)
+                    print round(net.sim([example])[0][0]),
+                    print round(nt.activate(example))
+            except IOError:
+                print "no created networks for %s" % i
 
 if __name__ == '__main__':
     ff = ANNgenerator()
-    ff.show_res()
+    ff.test_res()
