@@ -320,9 +320,6 @@ class MelExtractor(object):
         You will see frames' images of all files in directory one after one.
         Look carefully and you'll see.
         """
-        self.dir_list = True
-        self.recon_type = 3
-        self.show_sbs = False
 
         if self.dir_list and self.glob_path:
             try:
@@ -365,7 +362,7 @@ class MelExtractor(object):
                                 plt.plot(np.linspace(0, len(i)-1, len(i)-1), i[1:])
                             plt.show()
                             # You can save numpy array there
-                            self.save_file(samples=smp, file_name=tmp+str(ss))
+                            # self.save_file(samples=smp, file_name=tmp+str(ss))
         else:
             print self.glob_path
             try:
@@ -399,6 +396,6 @@ if __name__ == '__main__':
     # doctest.testmod(verbose=True)
     logging.basicConfig(format=u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
                         level=logging.CRITICAL)
-    Mel = MelExtractor(glob_path="C:/Python27/QPSK/",
-                       glob_path_out="C:/Python27/Neural/Networks/next/numpy16/")
+    Mel = MelExtractor(glob_path="C:/Python27/Neural/Networks/back/speech/",
+                       glob_path_out="C:/Python27/Neural/Networks/next/numpy16/", dir_list=False)
     Mel.viewer()
