@@ -358,11 +358,11 @@ class MelExtractor(object):
                             for x, y in enumerate(smp):
                                 smp2[x] = y[:-2]
                             smp = self.dc_transform(smp2)
-                            for i in smp:
-                                plt.plot(np.linspace(0, len(i)-1, len(i)-1), i[1:])
-                            plt.show()
+                            # for i in smp:
+                            #     plt.plot(np.linspace(0, len(i)-1, len(i)-1), i[1:])
+                            # plt.show()
                             # You can save numpy array there
-                            # self.save_file(samples=smp, file_name=tmp+str(ss))
+                            self.save_file(samples=smp, file_name=tmp+str(ss))
         else:
             print self.glob_path
             try:
