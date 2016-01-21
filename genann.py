@@ -22,8 +22,11 @@ class ANNgenerator(object):
         self.lst_path = lst_path
         self.lst_of_commands = lst_of_commands
 
-    def ext(self, path):
-        example = np.load(path)
+    def ext(self, inform):
+        if isinstance(inform, str):
+            example = np.load(inform)
+        elif isinstance(inform, np.ndarray):
+            example = inform
         example = example[:, 1:, ]
         example = np.resize(example, len(example[0])*len(example))
         return example
@@ -78,17 +81,33 @@ class ANNgenerator(object):
 
     def test_res(self):
         self.lst_of_commands = ["back", "dark", "hight", "light", "low", "next", "stop"]
+        prc_n, nm_n, prc_b, nm_b = 0.0, 0.0, 0.0, 0.0
         for i in self.lst_of_commands:
-            print i,
             try:
-                file = open('networks/%s_brain' % i, 'r')
+                file = open('networks/%s_brain' % i)
                 nt = pickle.load(file)
                 file.close()
                 net = nl.load('networks/%s_neurolab' % i)
-                for fls in os.listdir("C:/Python27/Neural/Networks/back/numpy30/"):
-                    example = self.ext("C:/Python27/Neural/Networks/back/numpy30/%s" % fls)
-                    print round(net.sim([example])[0][0]),
-                    print round(nt.activate(example))
+                for fls in os.listdir("C:/Python27/Neural/me/"):
+                    print i, fls
+
+                    Ex = extractor.MelExtractor(glob_path="C:/Python27/Neural/me/%s" % fls, dir_list=False)
+
+                    nm_n += 1
+                    nm_b += 1
+                    example = self.ext(Ex.viewer())
+                    if fls.startswith(i):
+                        if round(net.sim([example])[0][0]) == 1.0:
+                            prc_n += 1
+                        if round(nt.activate(example)) == 1.0:
+                            prc_b += 1
+                    else:
+                        if round(net.sim([example])[0][0]) == 0.0:
+                            prc_n += 1
+                        if round(nt.activate(example)) == 0.0:
+                            prc_b += 1
+                    print "Neural - ", round(net.sim([example])[0][0]), "Neural prc - ", prc_n/nm_n*100, "%"
+                    print "Brain -  ", round(nt.activate(example)), "Brain prc -  ", prc_b/nm_b*100, "%", '\n'
             except IOError:
                 print "no created networks for %s" % i
 
