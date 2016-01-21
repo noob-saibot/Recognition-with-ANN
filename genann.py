@@ -1,11 +1,10 @@
 from pybrain.datasets import SupervisedDataSet
 from pybrain.tools.shortcuts import buildNetwork
 from pybrain.supervised.trainers import RPropMinusTrainer
-from pybrain.structure import *
+from pybrain.structure import SigmoidLayer
 import pickle
 import neurolab as nl
 import numpy as np
-import re
 import os
 import extractor
 
@@ -52,12 +51,12 @@ class ANNgenerator(object):
         net.trainf = nl.train.train_rprop
         trainer = RPropMinusTrainer(nt, dataset=ds, verbose=False)
         error = trainer.trainUntilConvergence(maxEpochs=100, verbose=True, continueEpochs=100, validationProportion=1e-10)
-        error = net.train(put, out, epochs=300, show=300, goal=1e-4, lr=1e-10)
+        error = net.train(put, out, epochs=500, show=300, goal=1e-4, lr=1e-10)
 
-        while error[-1] > 0.01:
+        while error[-1] > 1e-3:
             net = nl.net.newff([[np.min(put), np.max(put)]]*420, [num_hid, 1], [nl.trans.LogSig(), nl.trans.SatLinPrm()])
             net.trainf = nl.train.train_rprop
-            error = net.train(put, out, epochs=300, show=300, goal=1e-4, lr=1e-10)
+            error = net.train(put, out, epochs=500, show=300, goal=1e-4, lr=1e-10)
             num_hid += 1
 
         try:
@@ -75,27 +74,30 @@ class ANNgenerator(object):
         for i in self.lst_of_commands:
             print i
             dc[i] = 1
-            self.lst_path = ["C:/Python27/Neural/Networks/stop/numpy30/", "C:/Python27/Neural/Networks/back/numpy30/", "C:/Python27/Neural/Networks/dark/numpy30/", "C:/Python27/Neural/Networks/hight/numpy30/", "C:/Python27/Neural/Networks/light/numpy30/", "C:/Python27/Neural/Networks/low/numpy30/", "C:/Python27/Neural/Networks/next/numpy30/"]
+            self.lst_path = ["C:/Python27/Neural/tt2/", "C:/Python27/Neural/Networks/stop/numpy30/", "C:/Python27/Neural/Networks/back/numpy30/", "C:/Python27/Neural/Networks/dark/numpy30/", "C:/Python27/Neural/Networks/hight/numpy30/", "C:/Python27/Neural/Networks/light/numpy30/", "C:/Python27/Neural/Networks/low/numpy30/", "C:/Python27/Neural/Networks/next/numpy30/"]
             self.exam(dc, i)
             dc[i] = 0
 
     def test_res(self):
         self.lst_of_commands = ["back", "dark", "hight", "light", "low", "next", "stop"]
-        prc_n, nm_n, prc_b, nm_b = 0.0, 0.0, 0.0, 0.0
-        for i in self.lst_of_commands:
-            try:
-                file = open('networks/%s_brain' % i)
-                nt = pickle.load(file)
-                file.close()
-                net = nl.load('networks/%s_neurolab' % i)
-                for fls in os.listdir("C:/Python27/Neural/me/"):
-                    print i, fls
+        prc_sum, nm_sum = 0.0, 0.0
+        for fls in os.listdir("C:/Python27/Neural/me/"):
+            nm_sum += 1
+            Ex = extractor.MelExtractor(glob_path="C:/Python27/Neural/me/%s" % fls, dir_list=False)
+            ext_res = Ex.viewer()
 
-                    Ex = extractor.MelExtractor(glob_path="C:/Python27/Neural/me/%s" % fls, dir_list=False)
+            prc_n, nm_n, prc_b, nm_b = 0.0, 0.0, 0.0, 0.0
+            for i in self.lst_of_commands:
+                try:
+                    file = open('networks/%s_brain' % i)
+                    nt = pickle.load(file)
+                    file.close()
+                    net = nl.load('networks/%s_neurolab' % i)
+
 
                     nm_n += 1
                     nm_b += 1
-                    example = self.ext(Ex.viewer())
+                    example = self.ext(ext_res)
                     if fls.startswith(i):
                         if round(net.sim([example])[0][0]) == 1.0:
                             prc_n += 1
@@ -106,11 +108,25 @@ class ANNgenerator(object):
                             prc_n += 1
                         if round(nt.activate(example)) == 0.0:
                             prc_b += 1
-                    print "Neural - ", round(net.sim([example])[0][0]), "Neural prc - ", prc_n/nm_n*100, "%"
-                    print "Brain -  ", round(nt.activate(example)), "Brain prc -  ", prc_b/nm_b*100, "%", '\n'
-            except IOError:
-                print "no created networks for %s" % i
+                    # print "Neural - ", round(net.sim([example])[0][0]), "Neural prc - ", prc_n/nm_n*100, "%"
+                    # print "Brain -  ", round(nt.activate(example)), "Brain prc -  ", prc_b/nm_b*100, "%", '\n'
+                except IOError:
+                    print "no created networks for %s" % i
+            if prc_n/nm_n*100 == 100.0:
+                print 'Word was recognized by Neurolab'
+                prc_sum += 1
+            else:
+                print prc_n/nm_n*100
+            if prc_b/nm_b*100 == 100.0:
+                print 'Word was recognized by PyBrain'
+            else:
+                print prc_b/nm_b*100
+
+            print prc_sum/nm_sum*100
 
 if __name__ == '__main__':
     ff = ANNgenerator()
+    #ff.train_res()
     ff.test_res()
+    # Ex = extractor.MelExtractor(glob_path="C:/Python27/Neural/compare/", dir_list=True, glob_path_out="C:/Python27/Neural/tt2/")
+    # ext_res = Ex.viewer()
