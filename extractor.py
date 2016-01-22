@@ -21,24 +21,24 @@ class MelExtractor(object):
 
     Parameters
     ----------
-    speech_freq_max, speech_freq_min: int
+    :param speech_freq_max, speech_freq_min: int
         This is max, min frequency for detecting speech in frames.
-    mel_cf: int
+    :param mel_cf: int
         Number of cepstral coefficients.
-    recon_type: int
+    :param recon_type: int
         Provide different type of frames division.
-    num_filters: int
+    :param num_filters: int
         Number of mel filters.
-    show_sbs: bool
+    :param show_sbs: bool
         If true you'll see every step in process mel extracting.
-    dir_list: bool
+    :param dir_list: bool
         If true you'll work with directory of files, another you'll work with
         the specified file directly and depends on glob_path.
-    glob_path: str
+    :param glob_path: str
         It can be directory path or path to file.
-    num_fft: int
+    :param num_fft: int
         Number of samples after fft transform.
-    glob_path_out: str
+    :param glob_path_out: str
         This is a path to directory where you want to save mfcc array.
     """
     def __init__(self, speech_freq_max=8000, speech_freq_min=300, mel_cf=15, recon_type=3, num_filters=42,
@@ -60,24 +60,24 @@ class MelExtractor(object):
 
         Parameters
         ----------
-        @param path_in: str
+        :param path_in: str
             You can put full path in it or path to directory.
 
         Returns
         -------
-        num_channels: int
+        :return num_channels: int
             Number of channels
-        sampwidth: int
+        :return sampwidth: int
             Samples step.
-        framerate: int
+        :return framerate: int
             Frequence of samples.
-        num_frames: int
+        :return num_frames: int
             Number of frames.
-        comptype: int
+        :return comptype: int
             Type of compress
-        compname: str
+        :return compname: str
             Name of compress type
-        samples: ndarray
+        :return samples: ndarray
             Samples of file.
 
         Examples
@@ -123,12 +123,12 @@ class MelExtractor(object):
 
         Parameters
         ----------
-        @param samples: ndarray or array
+        :param samples: ndarray or array
             Array of samples
 
         Returns
         -------
-        samples: ndarray
+        :return samples: ndarray
             Array of samples
         """
         tmp = []
@@ -143,16 +143,16 @@ class MelExtractor(object):
 
         Parameters
         ----------
-        @param samples: ndarray
+        :param samples: ndarray
             Array of samples
-        @param param_: tuple
+        :param param_: tuple
             Tuple of parameters
-        @param fix_count: int
+        :param fix_count: int
             Number of frames. Default is 30.
 
         Returns
         -------
-        lst_of_frames: ndarray
+        :return lst_of_frames: ndarray
             Array of samples for each frames.
 
         Examples
@@ -221,14 +221,14 @@ class MelExtractor(object):
 
         Parameters
         ----------
-        @param freq: int
+        :param freq: int
             Frequence of samples.
-        @param smp_len: int
+        :param smp_len: int
             Lenght of frame.
 
         Returns
         -------
-        fbank: ndarray
+        :return fbank: ndarray
             Array of filters.
 
         Examples
@@ -283,12 +283,12 @@ class MelExtractor(object):
 
         Parameters
         ----------
-        @param samples: ndarray
+        :param samples: ndarray
             Array of frames' samples.
 
         Returns
         -------
-        c: ndarray
+        :return c: ndarray
             Array of mfcc.
 
         """
@@ -301,9 +301,9 @@ class MelExtractor(object):
 
         Parameters
         ----------
-        @param samples: ndarray
+        :param samples: ndarray
             Array of frames' samples.
-        @param file_name: str
+        :param file_name: str
             File name.
         """
         if self.glob_path_out:
@@ -328,7 +328,7 @@ class MelExtractor(object):
                 logging.critical(u'Incorrect path to directory!')
             else:
                 for ss, tmp in enumerate(os.listdir(self.glob_path)):
-                    print self.glob_path+tmp
+                    logging.debug(self.glob_path+tmp)
 
                     try:
                         prm, smp = self.wave_analyze(self.glob_path+tmp)
@@ -364,7 +364,7 @@ class MelExtractor(object):
                             # You can save numpy array there
                             self.save_file(samples=smp, file_name=tmp+str(ss))
         else:
-            print self.glob_path
+            logging.debug(self.glob_path)
             try:
                 prm, smp = self.wave_analyze(self.glob_path)
                 if prm[2] < 20000:
@@ -395,7 +395,7 @@ if __name__ == '__main__':
     # import doctest
     # doctest.testmod(verbose=True)
     logging.basicConfig(format=u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
-                        level=logging.CRITICAL)
+                        level=logging.DEBUG)
     Mel = MelExtractor(glob_path="C:/Python27/Neural/Networks/back/speech/",
-                       glob_path_out="C:/Python27/Neural/Networks/next/numpy16/", dir_list=False)
+                       glob_path_out="C:/Python27/Neural/Networks/next/numpy16/", dir_list=True)
     Mel.viewer()
