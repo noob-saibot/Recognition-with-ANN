@@ -15,6 +15,8 @@ from pybrain.datasets import SupervisedDataSet
 from pybrain.tools.shortcuts import buildNetwork
 from pybrain.supervised.trainers import RPropMinusTrainer
 
+logger = logging.getLogger(__name__)
+
 
 class AnnGenerator(object):
     """
@@ -28,9 +30,10 @@ class AnnGenerator(object):
         This is paths to folders where will be examples.
 
     """
-    def __init__(self, lst_of_commands=None, exam_path=None):
+    def __init__(self, lst_of_commands=None, exam_path=None, logger=None):
         self.exam_path = exam_path
         self.lst_of_commands = lst_of_commands
+        self.logger = logger or logging.getLogger(__name__)
 
     @staticmethod
     def ext_t(inform):
@@ -95,7 +98,7 @@ class AnnGenerator(object):
         for com in self.lst_of_commands:
             if file_name.startswith(com):
                 return com
-        logging.critical(u"We can't recognize what the command in this file.")
+        self.logger.critical(u"We can't recognize what the command in this file.")
         return None
 
     def exam(self, dc, train_com, train_path):
@@ -127,7 +130,7 @@ class AnnGenerator(object):
             for i in os.listdir(way):
                 lk = self.link(i)
                 if lk:
-                    logging.debug(u'File was added to training list %s' % i)
+                    self.logger.debug(u'File was added to training list %s' % i)
                     result = self.ext_t(way+i)
                     ds.addSample(result, (dc[lk],))
                     put.append(result)
@@ -136,16 +139,16 @@ class AnnGenerator(object):
         net = nl.net.newff([[np.min(put), np.max(put)]]*420, [num_hid, 1], [nl.trans.LogSig(), nl.trans.SatLinPrm()])
         net.trainf = nl.train.train_rprop
         trainer = RPropMinusTrainer(nt, dataset=ds, verbose=False)
-        logging.info(u'Training brain...')
+        self.logger.info(u'Training brain...')
         trainer.trainUntilConvergence(maxEpochs=100, verbose=False, continueEpochs=100, validationProportion=1e-7)
-        logging.info(u'Training neural...')
+        self.logger.info(u'Training neural...')
         error = net.train(put, out, epochs=500, show=300, goal=1e-4, lr=1e-10)
 
         while error[-1] > 1e-3:
-            logging.info(u'Try to one more training, because MSE are little not enough!')
+            self.logger.info(u'Try to one more training, because MSE are little not enough!')
             net = nl.net.newff([[np.min(put), np.max(put)]]*420, [num_hid, 1], [nl.trans.LogSig(), nl.trans.SatLinPrm()])
             net.trainf = nl.train.train_rprop
-            logging.info(u'Training neural...')
+            self.logger.info(u'Training neural...')
             error = net.train(put, out, epochs=500, show=300, goal=1e-4, lr=1e-10)
             num_hid += 1
 
@@ -177,7 +180,7 @@ class AnnGenerator(object):
         for cm in self.lst_of_commands:
             dc[cm] = 0
         for i in self.lst_of_commands:
-            logging.info(u'Command is %s' % i)
+            self.logger.info(u'Command is %s' % i)
             dc[i] = 1
             self.exam(dc, i, train_path)
             dc[i] = 0
@@ -198,7 +201,7 @@ class AnnGenerator(object):
         """
         prc_sum, nm_sum = 0.0, 0.0
         for fls in os.listdir(path_for_testing):
-            logging.info(u"Word %s" % fls)
+            self.logger.info(u"Word %s" % fls)
             nm_sum += 1
             pron = extractor.MelExtractor(glob_path=path_for_testing+u"%s" % fls)
             ext_res = pron.viewer()
@@ -226,17 +229,17 @@ class AnnGenerator(object):
                             prc_b += 1
 
                 except IOError:
-                    logging.critical(u"no created networks for %s" % i)
+                    self.logger.critical(u"no created networks for %s" % i)
             if prc_n/nm_n*100 == 100.0:
-                logging.info(u'Word was recognized by Neurolab')
+                self.logger.info(u'Word was recognized by Neurolab')
                 prc_sum += 1
             else:
-                logging.debug(u'Neurolab %s' % unicode(prc_n/nm_n*100))
+                self.logger.debug(u'Neurolab %s' % unicode(prc_n/nm_n*100))
             if prc_b/nm_b*100 == 100.0:
-                logging.info(u'Word was recognized by PyBrain')
+                self.logger.info(u'Word was recognized by PyBrain')
             else:
-                logging.debug(u'PyBrain %s' % unicode(prc_b/nm_b*100))
+                self.logger.debug(u'PyBrain %s' % unicode(prc_b/nm_b*100))
 
-            logging.info(u'Result is %s' % unicode(prc_sum/nm_sum*100))
+            self.logger.info(u'Result is %s' % unicode(prc_sum/nm_sum*100))
         print u"Result of recognition by Neurolab is %s percents" % unicode(prc_sum/nm_sum*100)
 
