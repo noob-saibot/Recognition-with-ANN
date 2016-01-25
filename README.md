@@ -16,14 +16,22 @@ Two modules what provide the opportunity to recognize izolated words.
 import genann
 import extractor
 import logging
+
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
+# Input commands for recognition.
 commands = ["List of commands"]
+# Input list of directory to numpy arrays.
 path = ["List of paths"]
-Mel = extractor.MelExtractor(glob_path="YOURPATH", glob_path_out="YOURPATH",
+# Here you're extracting mfcc from files.
+mel = extractor.MelExtractor(glob_path="YOURPATH", glob_path_out="YOURPATH",
                              dir_list=True, logger=log)
-Mel.viewer()
-ff = genann.AnnGenerator(lst_of_commands=commands, logger=log)
-ff.train_res(path)
-ff.test_res(path_for_testing="YOURPATH")
+mel.viewer()
+
+# Create ANN.
+ann_example = genann.AnnGenerator(lst_of_commands=commands, logger=log)
+# Train them.
+ann_example.train_res(path)
+# Test them.
+ann_example.test_res(path_for_testing="YOURPATH")
 ```
