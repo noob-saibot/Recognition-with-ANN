@@ -12,7 +12,7 @@ Two modules what provide the opportunity to recognize izolated words.
 3. Testing result of training.
 
 ####Example:
-'''
+```
 import genann
 import extractor
 import logging
@@ -26,4 +26,4 @@ Mel.viewer()
 ff = genann.AnnGenerator(lst_of_commands=commands, logger=log)
 ff.train_res(path)
 ff.test_res(path_for_testing="YOURPATH")
-'''
+```
