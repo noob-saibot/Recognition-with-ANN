@@ -7,7 +7,7 @@ Two modules what provide the opportunity to recognize izolated words.
 3. You can save numpy arrays for each file.
 
 ####Second module is "genann.py".
-1. This module generate Artifical Neural Network for each command.
+1. This module generate Artificial Neural Network for each command.
 2. Training each ANN.
 3. Testing result of training.
 
@@ -35,3 +35,4 @@ ann_example.train_res(path)
 # Test them.
 ann_example.test_res(path_for_testing="YOURPATH")
 ```
+
