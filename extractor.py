@@ -391,11 +391,3 @@ class MelExtractor(object):
                 smp = self.dc_transform(smp_z)
                 return smp
 
-if __name__ == '__main__':
-    # import doctest
-    # doctest.testmod(verbose=True)
-    logging.basicConfig(format=u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
-                        level=logging.DEBUG)
-    Mel = MelExtractor(glob_path="C:/Python27/Neural/Networks/back/speech/",
-                       glob_path_out="C:/Python27/Neural/Networks/next/numpy16/", dir_list=True)
-    Mel.viewer()
