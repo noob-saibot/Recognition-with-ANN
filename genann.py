@@ -46,8 +46,17 @@ class AnnGenerator(object):
         -------
         :return example: ndarray
             Lonely array of mfcc.
+
+        Examples
+        --------
+
+        >>> pron = AnnGenerator()
+        >>> pron.ext_t(np.zeros([5,5]))
+        array([ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,
+                0.,  0.,  0.,  0.,  0.,  0.,  0.])
+        >>> pron.ext_t(list([1,2,3]))
         """
-        if isinstance(inform, str):
+        if isinstance(inform, unicode) or isinstance(inform, str):
             example = np.load(inform)
         elif isinstance(inform, np.ndarray):
             example = inform
@@ -61,6 +70,8 @@ class AnnGenerator(object):
         """
         Extracting command from filename.
 
+        Parameters
+        ----------
         :param file_name: str
             Name of file.
 
@@ -69,6 +80,17 @@ class AnnGenerator(object):
         :return com: str
             Command in file.
 
+        Examples
+        --------
+        >>> pron = AnnGenerator(lst_of_commands=[u"test1",u"test2",u"test3"])
+        >>> os.mkdir(u"tmp")
+        >>> f = open(u"tmp/test1.wav", "w")
+        >>> f.write("test")
+        >>> f.close()
+        >>> pron.link(u"test1")
+        u'test1'
+        >>> os.remove(u"tmp/test1.wav")
+        >>> os.rmdir(u"tmp")
         """
         for com in self.lst_of_commands:
             if file_name.startswith(com):
@@ -80,10 +102,17 @@ class AnnGenerator(object):
         """
         Here you can train your networks.
 
+        Parameters
+        ----------
         :param dc: dict
             Dict of commands with values.
         :param train_com:
             Command what you want teach by ann to recognize.
+        :param train_path:
+            Path to folder with train examples.
+
+        Returns
+        -------
         :return:
             File with network.
 
@@ -107,17 +136,17 @@ class AnnGenerator(object):
         net = nl.net.newff([[np.min(put), np.max(put)]]*420, [num_hid, 1], [nl.trans.LogSig(), nl.trans.SatLinPrm()])
         net.trainf = nl.train.train_rprop
         trainer = RPropMinusTrainer(nt, dataset=ds, verbose=False)
-        trainer.trainUntilConvergence(maxEpochs=100, verbose=False, continueEpochs=100, validationProportion=1e-10)
-        logging.debug(u'Training brain...')
+        logging.info(u'Training brain...')
+        trainer.trainUntilConvergence(maxEpochs=100, verbose=False, continueEpochs=100, validationProportion=1e-7)
+        logging.info(u'Training neural...')
         error = net.train(put, out, epochs=500, show=300, goal=1e-4, lr=1e-10)
-        logging.debug(u'Training neural...')
 
         while error[-1] > 1e-3:
-            logging.debug(u'Try to one more training, because MSE are little not enough!')
+            logging.info(u'Try to one more training, because MSE are little not enough!')
             net = nl.net.newff([[np.min(put), np.max(put)]]*420, [num_hid, 1], [nl.trans.LogSig(), nl.trans.SatLinPrm()])
             net.trainf = nl.train.train_rprop
+            logging.info(u'Training neural...')
             error = net.train(put, out, epochs=500, show=300, goal=1e-4, lr=1e-10)
-            logging.debug(u'Training neural...')
             num_hid += 1
 
         try:
@@ -134,31 +163,45 @@ class AnnGenerator(object):
         """
         Involve exam module to creating and training ann
 
+        Parameters
+        ----------
         :param train_path: str or list
             Path to examples
 
+        Returns
+        -------
         :return:
             File with network.
         """
-        dc = {"back": 0, "dark": 0, "hight": 0, "light": 0, "low": 0, "next": 0, "stop": 0}
+        dc = {}
+        for cm in self.lst_of_commands:
+            dc[cm] = 0
         for i in self.lst_of_commands:
-            logging.debug(u'File is', i)
+            logging.info(u'Command is %s' % i)
             dc[i] = 1
             self.exam(dc, i, train_path)
             dc[i] = 0
 
-    def test_res(self):
+    def test_res(self, path_for_testing):
         """
         Provide test of created ann for examples.
 
+        Parameters
+        ----------
+        :param path_for_testing: str or unicode
+            Path to files for testing.
+
+        Returns
+        -------
         :return:
             Return statistic of tests.
         """
         prc_sum, nm_sum = 0.0, 0.0
-        for fls in os.listdir(u"C:/Python27/Neural/me/"):
+        for fls in os.listdir(path_for_testing):
+            logging.info(u"Word %s" % fls)
             nm_sum += 1
-            Ex = extractor.MelExtractor(glob_path=u"C:/Python27/Neural/me/%s" % fls, dir_list=False)
-            ext_res = Ex.viewer()
+            pron = extractor.MelExtractor(glob_path=path_for_testing+u"%s" % fls)
+            ext_res = pron.viewer()
 
             prc_n, nm_n, prc_b, nm_b = 0.0, 0.0, 0.0, 0.0
             for i in self.lst_of_commands:
@@ -183,27 +226,17 @@ class AnnGenerator(object):
                             prc_b += 1
 
                 except IOError:
-                    logging.critical(u"no created networks for ", i)
+                    logging.critical(u"no created networks for %s" % i)
             if prc_n/nm_n*100 == 100.0:
-                logging.debug(u'Word was recognized by Neurolab')
+                logging.info(u'Word was recognized by Neurolab')
                 prc_sum += 1
             else:
-                logging.debug(u'Neurolab', prc_n/nm_n*100)
+                logging.debug(u'Neurolab %s' % unicode(prc_n/nm_n*100))
             if prc_b/nm_b*100 == 100.0:
-                logging.debug(u'Word was recognized by PyBrain')
+                logging.info(u'Word was recognized by PyBrain')
             else:
-                logging.debug(u'PyBrain', prc_b/nm_b*100)
+                logging.debug(u'PyBrain %s' % unicode(prc_b/nm_b*100))
 
-            logging.debug(u'Result is', prc_sum/nm_sum*100)
+            logging.info(u'Result is %s' % unicode(prc_sum/nm_sum*100))
+        print u"Result of recognition by Neurolab is %s percents" % unicode(prc_sum/nm_sum*100)
 
-if __name__ == '__main__':
-    logging.basicConfig(format=u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
-                        level=logging.DEBUG)
-    commands = [u"back", u"dark", u"hight", u"light", u"low", u"next", u"stop"]
-    path = [u"C:/Python27/Neural/tt2/", u"C:/Python27/Neural/Networks/stop/numpy30/",
-            u"C:/Python27/Neural/Networks/back/numpy30/", u"C:/Python27/Neural/Networks/dark/numpy30/",
-            u"C:/Python27/Neural/Networks/hight/numpy30/", u"C:/Python27/Neural/Networks/light/numpy30/",
-            u"C:/Python27/Neural/Networks/low/numpy30/", u"C:/Python27/Neural/Networks/next/numpy30/"]
-    ff = AnnGenerator(lst_of_commands=commands)
-    # ff.train_res(path)
-    ff.test_res()
