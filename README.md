@@ -1,7 +1,7 @@
 #Recognition-with-ANN
-Two modules what provide the opportunity to recognize izolated words.
+Two modules what provide the opportunity to recognize isolated words.
 
-####Firts module is "extractor.py".
+####First module is "extractor.py".
 1. This module extract mfcc from WAV files.
 2. You can return array of mfcc for each frames.
 3. You can save numpy arrays for each file.
