@@ -14,6 +14,8 @@ import numpy as np
 from scipy.fftpack import rfft, dct
 from scipy.signal import hamming
 
+logger = logging.getLogger(__name__)
+
 
 class MelExtractor(object):
     """
@@ -42,7 +44,7 @@ class MelExtractor(object):
         This is a path to directory where you want to save mfcc array.
     """
     def __init__(self, speech_freq_max=8000, speech_freq_min=300, mel_cf=15, recon_type=3, num_filters=42,
-                 show_sbs=False, dir_list=False, glob_path=None, num_fft=1024, glob_path_out=None):
+                 show_sbs=False, dir_list=False, glob_path=None, num_fft=1024, glob_path_out=None, logger=None):
         self.speech_freq_max = speech_freq_max
         self.speech_freq_min = speech_freq_min
         self.mel_cf = mel_cf
@@ -53,6 +55,7 @@ class MelExtractor(object):
         self.glob_path = glob_path
         self.num_fft = num_fft
         self.glob_path_out = glob_path_out
+        self.logger = logger or logging.getLogger(__name__)
 
     def wave_analyze(self, path_in=None):
         """
@@ -108,7 +111,7 @@ class MelExtractor(object):
             if num_channels != 1:
                 samples = samples[::num_channels]
                 num_frames = len(samples)
-            logging.debug(u"Wav parameters is: %s %s %s %s %s %s" %
+            self.logger.debug(u"Wav parameters is: %s %s %s %s %s %s" %
                           (num_channels, sampwidth, framerate, num_frames, comptype, compname))
             if self.show_sbs:
                 plt.plot(np.linspace(0, num_frames, len(samples[::4])), samples[::4])
@@ -170,33 +173,33 @@ class MelExtractor(object):
         if self.show_sbs:
             tmp = rfft(samples)[::4]
             tmp = tmp*hamming(len(tmp))
-            logging.debug(u"Len samples before zeros pop %s" % len(samples))
+            self.logger.debug(u"Len samples before zeros pop %s" % len(samples))
             plt.plot(np.linspace(0, param_[2]/2, len(tmp)), tmp)
             plt.show()
         # Filtering and window function
         samples = filter(lambda x: x != 0, samples)
         samples *= hamming(len(samples))
-        logging.debug(u"Len samples after zeros pop %s" % len(samples))
+        self.logger.debug(u"Len samples after zeros pop %s" % len(samples))
 
         # If recon_type is 1, we'll get fixed number of frames with adaptive width and 10ms step overflow.
         if self.recon_type == 1:
             tmp = int((len(samples) - (fix_count-1)*param_[2]*0.01))
             lst_of_frames = [samples[:tmp:]]
             samples = samples[int(0.01*param_[2])::]
-            logging.debug(u"Frame size is - %s" % tmp)
-            logging.debug(u"Step size is - %s" % len(samples[:int(0.01*param_[2]):]))
+            self.logger.debug(u"Frame size is - %s" % tmp)
+            self.logger.debug(u"Step size is - %s" % len(samples[:int(0.01*param_[2]):]))
             for mel in xrange(1, fix_count):
                 lst_of_frames = np.append(lst_of_frames, [samples[:tmp:]], axis=0)
                 samples = samples[int(0.01*param_[2])::]
-            logging.debug(u"We've got this number of frames - %s" % len(lst_of_frames))
+            self.logger.debug(u"We've got this number of frames - %s" % len(lst_of_frames))
             return lst_of_frames
 
         # If recon_type is 2, we'll get full number of frames 25ms width and 10ms step overflow.
         elif self.recon_type == 2:
             lst_of_frames = [samples[:int(0.025*param_[2]):]]
             samples = samples[int(0.01*param_[2])::]
-            logging.debug(u"Frame size is - %s" % len(samples[:int(0.025*param_[2]):]))
-            logging.debug(u"Step size is - %s" % len(samples[:int(0.01*param_[2]):]))
+            self.logger.debug(u"Frame size is - %s" % len(samples[:int(0.025*param_[2]):]))
+            self.logger.debug(u"Step size is - %s" % len(samples[:int(0.01*param_[2]):]))
             for tmp in xrange(0, int(round((len(samples)-0.025*param_[2]) / (0.01*param_[2])))):
                 lst_of_frames = np.append(lst_of_frames, [samples[:int(0.025*param_[2]):]], axis=0)
                 samples = samples[int(0.01*param_[2])::]
@@ -207,12 +210,12 @@ class MelExtractor(object):
             tmp = int((len(samples) / (1+0.5*fix_count)))
             lst_of_frames = [samples[:tmp:]]
             samples = samples[tmp/2::]
-            logging.debug(u"Frame size is - %s" % tmp)
-            logging.debug(u"Step size is - %s" % len(samples[:tmp/2:]))
+            self.logger.debug(u"Frame size is - %s" % tmp)
+            self.logger.debug(u"Step size is - %s" % len(samples[:tmp/2:]))
             for mel in xrange(1, fix_count):
                 lst_of_frames = np.append(lst_of_frames, [samples[:tmp:]], axis=0)
                 samples = samples[tmp/2::]
-            logging.debug(u"We've got this number of frames - %s" % len(lst_of_frames))
+            self.logger.debug(u"We've got this number of frames - %s" % len(lst_of_frames))
             return lst_of_frames
 
     def bank(self, freq, smp_len):
@@ -252,7 +255,7 @@ class MelExtractor(object):
                              self.num_filters)
         # Translate mel to freq scale
         mel2fr = 700*(np.exp(fr2mel/1125.0) - 1)
-        logging.debug(u"Peak of filters is - %s" % mel2fr)
+        self.logger.debug(u"Peak of filters is - %s" % mel2fr)
         if self.show_sbs:
             for x, y in enumerate(mel2fr):
                 if x not in [0, self.num_filters-1]:
@@ -266,7 +269,7 @@ class MelExtractor(object):
         for tmp in mel2fr:
             # Translate freq scale to samples scale
             lst_of_fbank = np.append(lst_of_fbank, np.round((smp_len+1) * tmp*2/freq))
-        logging.debug(u"Number of samples for filter is - %s" % lst_of_fbank)
+        self.logger.debug(u"Number of samples for filter is - %s" % lst_of_fbank)
 
         # There are filtering directly
         fbank = np.zeros([self.num_filters, smp_len])
@@ -310,7 +313,7 @@ class MelExtractor(object):
             try:
                 np.save(self.glob_path_out+str(file_name.split(".wav")[0]), samples)
             except IOError:
-                logging.info(u'Creating new directory.')
+                self.logger.info(u'Creating new directory.')
                 os.mkdir(self.glob_path_out)
                 np.save(self.glob_path_out+str(file_name.split(".wav")[0]), samples)
 
@@ -325,15 +328,15 @@ class MelExtractor(object):
             try:
                 os.listdir(self.glob_path)
             except WindowsError:
-                logging.critical(u'Incorrect path to directory!')
+                self.logger.critical(u'Incorrect path to directory!')
             else:
                 for ss, tmp in enumerate(os.listdir(self.glob_path)):
-                    logging.debug(self.glob_path+tmp)
+                    self.logger.info(self.glob_path+tmp)
 
                     try:
                         prm, smp = self.wave_analyze(self.glob_path+tmp)
                     except (wave.Error, IOError, EOFError):
-                        logging.critical(u'Wrong type of file %s' % tmp)
+                        self.logger.critical(u'Wrong type of file %s' % tmp)
 
                     else:
                         smp = self.pre_emphases(smp)
@@ -346,7 +349,7 @@ class MelExtractor(object):
                         try:
                             fbank = self.bank(prm[2], len(smp[0]))
                         except IndexError:
-                            logging.critical(u'Min frame rate of file should be more than 20000, %s has less.' % tmp)
+                            self.logger.critical(u'Min frame rate of file should be more than 20000, %s has less.' % tmp)
                         else:
                             # Multiplication matrix
                             smp = np.dot(smp, fbank.T)
@@ -364,18 +367,18 @@ class MelExtractor(object):
                             # You can save numpy array there
                             self.save_file(samples=smp, file_name=tmp+str(ss))
         else:
-            logging.debug(self.glob_path)
+            self.logger.debug(self.glob_path)
             try:
                 prm, smp = self.wave_analyze(self.glob_path)
                 if prm[2] < 20000:
-                        logging.critical(u'Min frame rate of file should be more than 20000, %s has less'
-                                         % self.glob_path)
+                        self.logger.critical(u'Min frame rate of file should be more than 20000, %s has less'
+                                             % self.glob_path)
                         raise IndexError(u'Min frame rate of file should be more than 20000, %s has less'
                                          % self.glob_path)
             except wave.Error:
-                logging.critical(u'You should write correct global path for directory or WAV-file immediately')
+                self.logger.critical(u'You should write correct global path for directory or WAV-file immediately')
             except IOError:
-                logging.critical(u'You have to write full path to file!')
+                self.logger.critical(u'You have to write full path to file!')
             else:
                 smp = self.pre_emphases(smp)
                 smp = self.frame_constructor(smp, prm)
