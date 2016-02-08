@@ -1,9 +1,18 @@
-from setuptools import setup, find_packages
-from os.path import join, dirname
-
-setup(
-    name='Recognition-with-ANN',
-    version='1.0',
-    packages=find_packages(),
-    long_description=open(join(dirname(__file__), 'README.md')).read(),
-)
+#!/usr/bin/env python
+import os
+from setuptools import setup
+os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
+try:
+    from setuptools import setup, find_packages
+except ImportError:
+    from distutils.core import setup
+ 
+setup(name='ANNrecon',
+ version='1.0',
+ description='Module for recognition isolated words',
+ author='Alekseev Anton',
+ author_email='aaalekseev0994@gmail.ru',
+ install_requires=['numpy', 'neurolab', 'pybrain', 'wave', 'scipy', 'matplotlib'],
+ packages= ['ANNrecon'],
+ include_package_data=True
+ )
