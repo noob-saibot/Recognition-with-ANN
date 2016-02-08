@@ -243,14 +243,3 @@ class AnnGenerator(object):
             self.logger.info(u'Result is %s' % unicode(prc_sum/nm_sum*100))
         print u"Result of recognition by Neurolab is %s percents" % unicode(prc_sum/nm_sum*100)
 
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(verbose=False)
-    commands = [u"back", u"dark", u"hight", u"light", u"low", u"next", u"stop"]
-    path = [u"C:/Python27/Neural/tt2/", u"C:/Python27/Neural/Networks/stop/numpy30/",
-            u"C:/Python27/Neural/Networks/back/numpy30/", u"C:/Python27/Neural/Networks/dark/numpy30/",
-            u"C:/Python27/Neural/Networks/hight/numpy30/", u"C:/Python27/Neural/Networks/light/numpy30/",
-            u"C:/Python27/Neural/Networks/low/numpy30/", u"C:/Python27/Neural/Networks/next/numpy30/"]
-    ff = AnnGenerator(lst_of_commands=commands)
-    # ff.train_res(path)
-    ff.test_res(path_for_testing=u"C:/Python27/Neural/tt/")
