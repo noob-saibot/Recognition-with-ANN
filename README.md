@@ -14,6 +14,12 @@ Two modules what provide the opportunity to recognize isolated words.
 ####Installation:
 ```pip install ANNrecon-1.0.tar.gz```
 
+####Instruction:
+1. You have to write some audio files in WAV.
+2. Extract mfcc from this files and save them by the 'extractor.py' (Look at example)
+3. Now you should create and train ANN by your training examples. (Look at example)
+4. Finally put your test examples to the 'genann.py' and wait while program provide you results of testing. (Look at example)
+
 ####Example:
 ```
 from ANNrecon import *
