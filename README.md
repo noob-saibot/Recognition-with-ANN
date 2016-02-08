@@ -11,6 +11,9 @@ Two modules what provide the opportunity to recognize isolated words.
 2. Training each ANN.
 3. Testing result of training.
 
+####Installation:
+```pip install ANNrecon-1.0.tar.gz```
+
 ####Example:
 ```
 from ANNrecon import *
@@ -34,4 +37,6 @@ ann_example.train_res(path)
 # Test them.
 ann_example.test_res(path_for_testing="YOURPATH")
 ```
+
+
 
