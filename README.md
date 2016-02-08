@@ -13,8 +13,7 @@ Two modules what provide the opportunity to recognize isolated words.
 
 ####Example:
 ```
-import genann
-import extractor
+from ANNrecon import *
 import logging
 
 log = logging.getLogger(__name__)
