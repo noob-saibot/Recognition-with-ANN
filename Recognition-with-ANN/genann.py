@@ -142,14 +142,14 @@ class AnnGenerator(object):
         self.logger.info(u'Training brain...')
         trainer.trainUntilConvergence(maxEpochs=100, verbose=False, continueEpochs=100, validationProportion=1e-7)
         self.logger.info(u'Training neural...')
-        error = net.train(put, out, epochs=500, show=300, goal=1e-4, lr=1e-10)
+        error = net.train(put, out, epochs=500, show=500, goal=1e-4, lr=1e-10)
 
         while error[-1] > 1e-3:
             self.logger.info(u'Try to one more training, because MSE are little not enough!')
             net = nl.net.newff([[np.min(put), np.max(put)]]*420, [num_hid, 1], [nl.trans.LogSig(), nl.trans.SatLinPrm()])
             net.trainf = nl.train.train_rprop
             self.logger.info(u'Training neural...')
-            error = net.train(put, out, epochs=500, show=300, goal=1e-4, lr=1e-10)
+            error = net.train(put, out, epochs=500, show=500, goal=1e-4, lr=1e-10)
             num_hid += 1
 
         try:
@@ -243,3 +243,14 @@ class AnnGenerator(object):
             self.logger.info(u'Result is %s' % unicode(prc_sum/nm_sum*100))
         print u"Result of recognition by Neurolab is %s percents" % unicode(prc_sum/nm_sum*100)
 
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(verbose=False)
+    commands = [u"back", u"dark", u"hight", u"light", u"low", u"next", u"stop"]
+    path = [u"C:/Python27/Neural/tt2/", u"C:/Python27/Neural/Networks/stop/numpy30/",
+            u"C:/Python27/Neural/Networks/back/numpy30/", u"C:/Python27/Neural/Networks/dark/numpy30/",
+            u"C:/Python27/Neural/Networks/hight/numpy30/", u"C:/Python27/Neural/Networks/light/numpy30/",
+            u"C:/Python27/Neural/Networks/low/numpy30/", u"C:/Python27/Neural/Networks/next/numpy30/"]
+    ff = AnnGenerator(lst_of_commands=commands)
+    # ff.train_res(path)
+    ff.test_res(path_for_testing=u"C:/Python27/Neural/tt/")
